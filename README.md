@@ -9,6 +9,7 @@ A generated scene of the sunset from inside an ice cavern mouth.
 ### Breakdown
 The scene can be broken down into 3 parts: the sky, the cavern ceiling, and the ground. I added 2 new features to the scene: the torches and the cursor light. 
 
+
 ### How was randomness used?
 1. The ice caverns were generated randomly with the help of quatric(4th power) and zenzicubic(6th power) polynomials because they had distinct wave like shapes. In code, these are generated lambda functions. To generate the functions, I randomly selected n x-intercepts and a coefficient and combined them into a single lambda representing that function (or iceCurve).
 
@@ -20,10 +21,12 @@ The scene can be broken down into 3 parts: the sky, the cavern ceiling, and the 
 
 For the above, i used noise whenever I the seed shouldn't be changed (as in drawing) and random when generating new functions. To put it simply, random was used in function generation and noise was used in draw time.
 
+
 ### How was reactivity used? 
 1. I included parallax for the different layers of cavern. My reasoning was that I wanted the user to look around in a way.
 
 2. I also had a orb of light follow the cursor. This was used to reinforce free static exploration. 
+
 
 ### Artist Statement
 
