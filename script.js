@@ -2,13 +2,12 @@
 let seed = 10943;
 
 const grassColor = "#e1ac4a";
-const OCEAN_COLOR = "#0AB7B2";
+const OCEAN_COLOR = "#fd5e53";
 
-const treeColor = "#3d1803";
-const leaveColor = "#233610";
-const sunColor = [254,254,254,80]; // with opacity
+const treeColor = "#b6eef0";
 
 let iceCurves = Array(4);
+let iceParallax = Array(4);
 let bedFunc;
 let bedSteps;
 let lightZCurve;
@@ -21,14 +20,15 @@ function preload() {
 function setup() {
   createCanvas(800, 400);
   createButton("reroll").mousePressed(() =>{
-                                      
+                              
                                       newSeed();
                                     });
   LIGHT_COLOR = color("#FFFFFF");
-  ICE_COLORS = [color("#33B7D9"), color("#4CD3BB"), color("#29E3F9"), color("#A1EBFB")];
+  ICE_COLORS = [color("#d0f2ff"), color("#bee8ff"), color("#98cfff"), color("#8ac0ff")];
   generateAllIce();
   bedFunc = generateGround();
-
+  bedSteps = round(random(30, 150));
+  generateTorches();
 }
 
 
@@ -36,16 +36,15 @@ function newSeed(){
   seed++;
   generateAllIce(); 
   bedFunc = generateGround();
-  console.log(bedFunc(100))
   bedSteps = round(random(30, 150));
+  generateTorches();
 }
 
 
-const GCOEFF_RANGES = {2: [10, 20], 4:[30, 60], 6:[200, 250]};
+const GCOEFF_RANGES = {2: [30, 40], 4:[20, 40], 6:[180, 200]};
 function generateAllIce(){
-  //console.log(iceCurves.length)
   for (let i = 0; i < iceCurves.length; i++){
-    let yoffset = (i != iceCurves.length-1) ? (iceCurves.length-i)*height/8 : height/3;
+    let yoffset = (i != iceCurves.length-1) ? (iceCurves.length-i)*height/32 : height/16;
     iceCurves[i] = generateIce(yoffset);
   }
 }
@@ -54,8 +53,6 @@ function generateIce(yoffset=0){
   const TOTAL_INTCP = random([4,6]);
   
   const IVLS = 16;
-  const MINCOEFF = 0.5;
-  const MAXCOEFF = 1.5; 
   
   let s = IVLS + 2;
   let gcoeff = random(...GCOEFF_RANGES[TOTAL_INTCP]) * 10**(2*TOTAL_INTCP - 2)
@@ -69,14 +66,10 @@ function generateIce(yoffset=0){
   return genNPowerPoly(intcp, gcoeff * random([-1, 1]), yoffset);
 }
 
-function generateLight(){
-
-}
-
 function generateGround(){
   const TOTAL_INTCP = 2;
   
-  const IVLS = 16;
+  const IVLS = 8;
   
   let s = IVLS + 2;
   let gcoeff = random(...GCOEFF_RANGES[TOTAL_INTCP]) * 10**(2*TOTAL_INTCP - 2)
@@ -87,7 +80,7 @@ function generateGround(){
   for (let i = 0; i < intcp.length; i++){
     intcp[i] += random()*(s/TOTAL_INTCP)*width/IVLS;
   }
-  return genNPowerPoly(intcp, gcoeff, -100);
+  return genNPowerPoly(intcp, gcoeff*random([-1, 1]), 300);
 }
 
 function genNPowerPoly(xintcp, gcoeff = 1, yoffset = 0) {
@@ -112,27 +105,57 @@ function genNPowerPoly(xintcp, gcoeff = 1, yoffset = 0) {
 
 function drawAllIce(){
   for (i = 0; i < iceCurves.length; i++){
-    drawIce(iceCurves[i], ICE_COLORS[i], noise(seed+i)*150)
+    drawIce(iceCurves[i], ICE_COLORS[i], noise(seed+i)*150, iceParallax[i])
   }
 }
 
-function drawIce(iceFunc, iceColor, steps){
+function drawIce(iceFunc, iceColor, steps, xOffset){
   fill(iceColor);
   noStroke();
 
   beginShape();
 
-  vertex(0, 0);  
+  
+  const PAD_STEPS = 40;
+  //fill("#000000");
+  let x1 = (width * -PAD_STEPS) / steps;
+  let y1 =  iceFunc(x1) + noise(x1)*height/2;
+  vertex(x1+xOffset, 0);  
+  vertex(x1+xOffset, y1);
+
+  let x2,y2;
+  for (let i = -PAD_STEPS; i <= steps + PAD_STEPS; i+= 1) {
+    x2 = (width * i) / steps;
+    y2 =  iceFunc(x2) + noise(x2)*height/2;
+
+
+    vertex(x2+xOffset, y2);
+    x1 = x2;
+    y1 = y2;
+
+  }
+  vertex(xOffset+x2, 0); 
+  endShape(CLOSE);  
+}
+
+
+function drawGround(polyFunc, groundColor, steps){
+  fill(groundColor);
+  noStroke();
+
+  beginShape();
+
+  vertex(0, height);  
   
   //fill("#000000");
   let x1 = 0;
-  let y1 =  iceFunc(x1) + noise(x1)*height/25;
+  let y1 =  polyFunc(x1) + noise(x1)*height/25;
   vertex(x1, y1);
 
   let x2,y2;
   for (let i = 0; i < steps + 1; i+= 1) {
     x2 = (width * i) / steps;
-    y2 =  iceFunc(x2) + noise(x2)*height/25;
+    y2 =  polyFunc(x2) + noise(x2)*height/25;
 
 
     vertex(x2, y2);
@@ -156,10 +179,9 @@ function drawIce(iceFunc, iceColor, steps){
 
   }
   //fill(iceColor);
-  vertex(width, 0); 
+  vertex(width, height); 
   endShape(CLOSE);  
 }
-
 
  // From https://github.com/processing/p5.js/issues/364
  function gradientLine(x1, y1, x2, y2, color1, color2) {
@@ -173,76 +195,109 @@ function drawIce(iceFunc, iceColor, steps){
   line(x1, y1, x2, y2);
 }
 
-
-
 let LIGHT_RADIUS = 75; // Half
 function drawCursorLight(){
-    let lcolor = color(LIGHT_COLOR);
-    lcolor.setAlpha(64);
-    stroke(lcolor);
-    line(mouseX, 0, mouseX, height);
-    
-    for (let i =1; i < LIGHT_RADIUS; i++){
-      lcolor.setAlpha(64*(1-i/LIGHT_RADIUS));
-      stroke(lcolor);
-      line(mouseX + i, 0, mouseX+i, height);  
-      line(mouseX - i, 0, mouseX-i, height);
-      
+  let lcolor = color(LIGHT_COLOR);
+  lcolor.setAlpha(64);
+  
+  fill(lcolor);
+
+  circle(mouseX, mouseY, 80)
+
+  noStroke();
+}
+
+let torches;
+function generateTorches(){
+  let t = random([1, 2, 3]);
+  torches = [];
+  let s;
+  let isGoodX;
+
+  for (let i =0; i < t; i++){
+    isGoodX = false;
+    //Choose a random x;
+    while (!isGoodX){
+      isGoodX = true;
+      s = random(50, width-50);
+      for (let j = 0; j < torches.length; j++)
+        isGoodX &= abs(torches[j].x - s) > 100;
     }
-    noStroke();
+
+    let t = random(bedFunc(s)+40, height);
+    let d = map(t, height, 300, 3, 0.5)
+    //console.log(d);
+    torches.push({x: s, y: t, scale: d});
+    isGoodX = false;
+  }
+}
+
+const TORCH_WIDTH = 3;
+const TORCH_HEIGHT = 50;
+
+const FIRE_COLOR = ["#cb2004", "#fb7604", "#fca204"];
+const TORCH_COLOR = "#111111";
+const BASE_COLOR = "#bee8ff";
+function drawTorch(x, y, scale = 1){
+  fill("#FFFFFF");
+  noStroke();
+
+  let w = TORCH_WIDTH * scale;
+  let h = TORCH_HEIGHT* scale;
+  
+  let c = 10 * scale;
+  let d = c*1.5;
+  let e = c*0.5;
+
+  fill(TORCH_COLOR);
+  rect(x-w/2, y-h, w, h);
+
+  fill(BASE_COLOR);
+  ellipse(x, y, c, e);
+
+  let lcolor = color(LIGHT_COLOR);
+  lcolor.setAlpha(64);
+  
+  fill(lcolor);
+  circle(x, y-h, c*3);
+
+  for (let i = 0; i < FIRE_COLOR.length; i++){
+    fill(FIRE_COLOR[i]);
+    let m = -0.25*i +1;
+    ellipse(x, y-h, c*m, d*m);
+  }
+
 }
 
 function drawBackground(){ 
-
     let begin = height/3;
     let end = height;
     let steps = end -begin;
     for (let j = begin; j < height; j+=0.1){
-      stroke(lerpColor(color("#000000"), color(OCEAN_COLOR), 1- (j-begin)/(steps)))
+      stroke(lerpColor(color(OCEAN_COLOR), color("#000000"), 1- (j-begin)/(steps)))
       line(0,j, width,j);
     } 
 }
 
 function draw() {
-  background(OCEAN_COLOR);
+  background("#000000");
   drawBackground();
   noiseSeed(seed);
-  
-  // x = noise(xoff)*width;
-  // y = noise(yoff)*height;
-  // circle(x, y, 20);
-  // xoff += 0.01;
-  // yoff += 0.03;
+
+  for (let i = 0; i < iceParallax.length; i++){
+    iceParallax[i] = map(mouseX, 0, width, -25*(i+1), 25*(i+1));
+  }
 
   //draw ground
-  drawIce(bedFunc, treeColor, bedSteps);
-  drawAllIce();
-  drawCursorLight();
-  //circle(20, 20, 30);
-  
-    //randomSeed(seed); //Fidure out the control flow
-    //circle(20, 200, 100);
-    
-    
-    // //noiseSeed(seed);
+  drawGround(bedFunc, treeColor, bedSteps);
 
-    // //background(100);
-  
-    // noStroke();
-  
-    // // fill(skyColor);
-    // // rect(0, 0, width, height / 2);
-  
-    // // An example of making something respond to the mouse
-    // // fill(...sunColor);
-    // // ellipse(mouseX,0,30,30);
-    // // ellipse(mouseX,0,50,50);
-    // // ellipse(mouseX,0,100,100);
-    // // ellipse(mouseX,0,200,200);
-  
-    // // fill(grassColor);
-    // // rect(0, height / 2, width, height / 2);
-  
-    // // An example of drawing an irregular polygon
-    
+  // draw torches
+  for (let t of torches)
+    drawTorch(t.x, t.y, t.scale);
+
+  // draw caverns
+  drawAllIce();
+
+  // draw cursor 
+  drawCursorLight();
 }
