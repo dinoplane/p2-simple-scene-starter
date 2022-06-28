@@ -1,5 +1,5 @@
 # Ice Cold Freedom
-![Picture of cavern]("https://static1.thetravelimages.com/wordpress/wp-content/uploads/2022/01/ice-cave.jpg")
+![Picture of cavern](https://static1.thetravelimages.com/wordpress/wp-content/uploads/2022/01/ice-cave.jpg)
 
 ## Description
 A generated scene of the sunset from inside an ice cavern mouth.
