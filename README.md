@@ -2,7 +2,7 @@
 ![Picture of cavern](https://static1.thetravelimages.com/wordpress/wp-content/uploads/2022/01/ice-cave.jpg)
 
 ## Description
-A generated scene of the sunset from inside an ice cavern mouth.
+A generated scene of the sunset from inside an ice cavern mouth (I changed the pallete a bit).
 
 ## Features
 
@@ -30,6 +30,6 @@ For the above, i used noise whenever I the seed shouldn't be changed (as in draw
 
 ### Artist Statement
 
-I was trying to make the user explore their enclosed surroundings. I achieved this effect, but I can improve with the use of shadows. 
+I was trying to make the user explore their enclosed surroundings. I achieved this effect, but I can improve with the use of shadows because the ice cavern patterns make the background look like a mountain. 
 
 Credit: Arrian Chi using template https://github.com/julinas/p2-simple-scene-starter
